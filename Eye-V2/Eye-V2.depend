@@ -1,5 +1,6 @@
 # depslib dependency file v1.0
-1525935074 source:/home/sai/Desktop/Eye-V2/main.c
+1526880645 source:/home/sai/Desktop/Eye-V2/main.c
 	<GL/glut.h>
 	<stdlib.h>
+	<SOIL/SOIL.h>
 

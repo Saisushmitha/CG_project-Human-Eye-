@@ -1,170 +1,45 @@
 #include <GL/glut.h>
 #include <stdlib.h>
-
+#include <SOIL/SOIL.h>
 int view = 0;
 int xt=0,xu =0;
 #define ESCAPE 27
 #define FPS 30
 
+static int pos = 10;
 int show = 0;
 GLint window;
 GLint window2;
 
-void display_string(int x, int y, char *string, int font)
-{
-	int len,i;
-	glRasterPos2f(x, y);
-	len = (int) strlen(string);
-	for (i = 0; i < len; i++) {
-		if(font==1)
-			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24,string[i]);
-		else if(font==2)
-			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18,string[i]);
-		else if(font==3)
-			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12,string[i]);
-		else if(font==4)
-			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_10,string[i]);
-	}
+void addImage() {
 
-}
-
-void display1(void)
-{
-
-	//glClearColor(1.0,1.0,1.0,1.0);
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-	glColor3f(1.0,1.0,1.0);
-	display_string(500,540,"PES INSTITUTE OF TECHNOLOGY",1);
-	display_string(420,500,"DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING",1);
-	display_string(490,400,"A MINI PROJECT ON  :",2);
-	display_string(630,400,"HUMAN EYE",2);
-	display_string(500,210,"BY:",2);
-	display_string(540,210,"SAI SUSHMITHA ",3);
-	display_string(540,190,"USN : 1PE15CS130",3);
-	//display_string(700,310,"GUIDES: ",2);
-	//display_string(700,280,"PROF. PREETHI/NEETA",3);
-	//display_string(700,260,"DR. SARASWATHI",3);
-	display_string(540,100,"PRESS SPACE BAR TO ENTER",2);
-	display_string(590,50,"ESCAPE TO EXIT",4);
-	glutSwapBuffers();
-
-}
-
-void edgeDetect(float x1,float y1,float x2,float y2,int *le,int *re)
-{
-	float mx,x,temp;
-	int i;
-
-	if((y2 - y1) < 0)
-	{
-		temp = y1;
-		y1 = y2;
-		y2 = temp;
-
-		temp = x1;
-		x1 = x2;
-		x2 = temp;
-	}
-
-	if((y2 - y1) != 0)
-		mx = (x2 - x1)/(y2 - y1);
-	else
-		mx = x2 - x1;
-	x = x1;
-
-	for(i = y1;i <= y2;i++)
-	{
-		if(x < le[i])
-			le[i] = (int)x;
-		if(x > re[i])
-			re[i] = (int)x;
-		x += mx;
-	}
-}
-
-void draw_pixel(int x,int y)
-{
-    glColor3f(1,0,0);
-	//glColor3f(0.5,1,0.8);
-	glBegin(GL_POINTS);
-		glVertex2i(x,y);
+	glEnable(GL_TEXTURE_2D);
+	glColor4f(1.0, 1.0, 1.0, 1.0);
+	//glColor4f(0,0,0,0);
+	GLuint tex_2d1 = SOIL_load_OGL_texture
+	(
+		"eye1.jpeg",
+		SOIL_LOAD_AUTO,
+		SOIL_CREATE_NEW_ID,
+		SOIL_FLAG_COMPRESS_TO_DXT
+	);
+	//change vertex co-ordinates accordingly
+	glBindTexture(GL_TEXTURE_2D, tex_2d1);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glBegin(GL_POLYGON);
+		glTexCoord2f(0.0, 1.0);
+		glVertex2f(150, 150);
+		glTexCoord2f(1.0, 1.0);
+		glVertex2f(30, 50);
+		glTexCoord2f(1.0, 0.0);
+		glVertex2f(205, 40);
+		glTexCoord2f(0.0, 0.0);
+		glVertex2f(10, 40);
 	glEnd();
+
+	glDisable(GL_TEXTURE_2D);
 	glFlush();
 }
-
-void scanfill(float x1,float y1,float x2,float y2,float x3,float y3, float x4,float y4)
-{
-	int le[500],re[500];
-	int i,y;
-
-	for(i = 0;i < 500;i++)
-	{
-		le[i] = 500;
-		re[i] = 0;
-	}
-
-	edgeDetect(x1,y1,x2,y2,le,re);
-	edgeDetect(x2,y2,x3,y3,le,re);
-	edgeDetect(x3,y3,x4,y4,le,re);
-	edgeDetect(x4,y4,x1,y1,le,re);
-
-	for(y = 0;y < 500;y++)
-	{
-		if(le[y] <= re[y])
-			for(i = (int)le[y];i <= (int)re[y];i++)
-				draw_pixel(i,y);
-	}
-}
-
-void draw_mark_line(float x1, float y1, float x2, float y2) {
-
-     glBegin(GL_LINES);
-        glColor3f(0.55,0.55,0.55);
-        glVertex2f(x1,y1);
-        glVertex2f(x2,y2);
-    glEnd();
-    glBegin(GL_POINT);
-        glPointSize(14.0);
-        glVertex2f(x2,y2);
-    glEnd();
-
-}
-
-static void SpecialKeyFunc( int Key, int x, int y );
-
-/* Simple  transformation routine */
-GLvoid Transform(GLfloat Width, GLfloat Height)
-{
-	glViewport(0, 0, Width, Height);              /* Set the viewport */
-	glMatrixMode(GL_PROJECTION);                  /* Select the projection matrix */
-	glLoadIdentity();				/* Reset The Projection Matrix */
-	gluPerspective(45.0,Width/Height,0.1,100.0);  /* Calculate The Aspect Ratio Of The Window */
-	glMatrixMode(GL_MODELVIEW);                   /* Switch back to the modelview matrix */
-}
-
-
-static void SpecialKeyFunc( int Key, int x, int y )
-{
-	switch ( Key ) {
-		case GLUT_KEY_RIGHT:
-			xt += 1;
-			printf("%d\n",xt);
-            //myreshape();
-
-//            myreshape();
-  //          ReSizeGLScene();
- 			display();
- 			break;
-        case GLUT_KEY_LEFT:
-                xu +=1;
-                printf("xu:%d\n",xu);
-                 display();
-
-
-	}
-}
-
-
 
 GLvoid home()
 {
@@ -303,6 +178,89 @@ GLvoid home()
 }
 
 
+void display_string(int x, int y, char *string, int font)
+{
+	int len,i;
+	glRasterPos2f(x, y);
+	len = (int) strlen(string);
+	for (i = 0; i < len; i++) {
+		if(font==1)
+			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24,string[i]);
+		else if(font==2)
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18,string[i]);
+		else if(font==3)
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12,string[i]);
+		else if(font==4)
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_10,string[i]);
+	}
+
+}
+
+void display1(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	glColor3f(1.0,1.0,1.0);
+	display_string(500,540,"PES INSTITUTE OF TECHNOLOGY",1);
+	display_string(420,500,"DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING",1);
+	display_string(490,400,"A MINI PROJECT ON  :",2);
+	display_string(630,400,"HUMAN EYE",2);
+	display_string(500,210,"BY:",2);
+	display_string(540,210,"SAI SUSHMITHA ",3);
+	display_string(540,190,"USN : 1PE15CS130",3);
+	//display_string(700,310,"GUIDES: ",2);
+	//display_string(700,280,"PROF. PREETHI/NEETA",3);
+	//display_string(700,260,"DR. SARASWATHI",3);
+	display_string(540,100,"PRESS SPACE BAR TO ENTER",2);
+	display_string(590,50,"ESCAPE TO EXIT",4);
+	glutSwapBuffers();
+}
+
+void draw_mark_line(float x1, float y1, float x2, float y2)
+ {
+     glBegin(GL_LINES);
+        glColor3f(0.55,0.55,0.55);
+        glVertex2f(x1,y1);
+        glVertex2f(x2,y2);
+    glEnd();
+    glBegin(GL_POINT);
+        glPointSize(14.0);
+        glVertex2f(x2,y2);
+    glEnd();
+}
+
+//front page keys
+void NormalKey(GLubyte key, GLint x, GLint y)
+{
+	switch ( key )    {
+		case ESCAPE : printf("Escape pressed. Exit.\n");
+                        glutDestroyWindow(window);	/* Close the window */
+                        exit(0);
+                        break;
+
+		case ' ':   view=1;
+                    display();
+                    break;
+		default:break;
+	}
+}
+
+//keys near the eye image
+ void SpecialKeyFunc( int Key, int x, int y )
+{
+	switch ( Key ) {
+		case GLUT_KEY_RIGHT:
+			xt += 1;
+			printf("%d\n",xt);
+			display();
+ 			break;
+        case GLUT_KEY_LEFT:
+            xu +=1;
+            printf("xu:%d\n",xu);
+            display();
+        default:break;
+	}
+}
+
 void init()
 {
 	glClearColor(0,0,0,0);
@@ -312,8 +270,7 @@ void init()
 	glOrtho(0.0,900.0,0.0,600.0,50.0,-50.0);
 }
 
-
-static void resize(int width, int height)
+ void resize(int width, int height)
 {
     const float ar = (float) width / (float) height;
 
@@ -322,24 +279,22 @@ static void resize(int width, int height)
     glLoadIdentity();
     glFrustum(-ar, ar, -1.0, 1.0, 2.0, 100.0);
     //gluOrtho2D(-1, 1, -1.0, 1.0);
-
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity() ;
 }
 
 GLvoid Transform(GLfloat width, GLfloat height)
 {
-	   const float ar = (float) width / (float) height;
-
+    const float ar = (float) width / (float) height;
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glFrustum(-ar, ar, -1.0, 1.0, 2.0, 100.0);
     //gluOrtho2D(-1, 1, -1.0, 1.0);
-
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity() ;
 }
+
 GLvoid ReSizeGLScene(GLint Width, GLint Height)
 {
 	if (Height==0)     Height=1;                   /* Sanity checks */
@@ -347,38 +302,33 @@ GLvoid ReSizeGLScene(GLint Width, GLint Height)
 	Transform( Width, Height );                   /* Perform the transformation */
 }
 
-
 void myreshape(int w,int h)
 {
 	glViewport(0,0,w,h);
-
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	if(w<=h)
 		glOrtho(-2.0,2.0,-2.0*(GLfloat)h/(GLfloat)w,2.0*(GLfloat)h/(GLfloat)w,-10.0,10.0);
 	else
 		glOrtho(-2.0*(GLfloat)w/(GLfloat)h,2.0*(GLfloat)w/(GLfloat)h,-2.0,2.0,-10.0,10.0);
-
 	glMatrixMode(GL_MODELVIEW);
 	glutPostRedisplay();
 }
 
-
  void display(void)
 {
     if (view == 0){
+
 		init();
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+		addImage();
 		display1();
+
     }
 
     else{
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //glColor3d(1,0,0);
-    //glMatrixMode(GL_PROJECTION);
-    //glMatrixMode(GL_PROJECTION);
-		//glLoadIdentity();
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    int signal, i, m;
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 
    // EyeBall
     glPushMatrix();
@@ -402,18 +352,14 @@ void myreshape(int w,int h)
     //bulg
     glPushMatrix();
         glColor3f(0.77254,0.82745,0.929411);
-        //glColor3d(0.95 ,0.95,0.95);
-            //glColor3f(0.439216,0.858824,0.576471);
-        //glColor3b(0.8627,0.8627,0.8627);
         glTranslated(1.0,0.37,-6.0);
         glRotated(-60, 1.0, 0.0, 0.0);
         glutSolidSphere(1.0,50,50);
     glPopMatrix();
-// inner bulg
+
+    // inner bulg
     glPushMatrix();
         glColor3d(0.85 ,0.85,0.85);
-         //glClearColor(1,1,1,1);
-        //glColor3b( 1 ,0,0);
         glTranslated(1.0,0.37,-5.5);
         glRotated(-60, 1.0, 0.0, 0.0);
         glutSolidSphere(0.85,50,50);
@@ -431,8 +377,7 @@ void myreshape(int w,int h)
 
     //next layer
     glPushMatrix();
-        //glColor3d(0.858824 ,0.439216,0.576471);
-         glColor3f(0.75686,0.4196078,0.4256862);
+        glColor3f(0.75686,0.4196078,0.4256862);
         glTranslated(2.3,0.49,-5.5);
         glRotated(-10, 1.0, 0.0, 0.0);
         glScalef(0.279,0.279,0.23);
@@ -459,8 +404,6 @@ void myreshape(int w,int h)
     //cillary body upper
     glPushMatrix();
         glColor3f(0.42745,0.258823,0.188235);
-        //check which one is good
-        //glColor3f(0.75686,0.4196078,0.4256862);
         glLineWidth(6.0);
         glTranslated(0.75,1.02,-3.799);
         glRotated(100, 1.0, 0.0, 0.0);
@@ -471,9 +414,7 @@ void myreshape(int w,int h)
     //cillary lower
     glPushMatrix();
         glColor3f(0.42745,0.258823,0.188235);
-        //check which one is good
-        //glColor3f(0.75686,0.4196078,0.4256862);
-         glLineWidth(6.0);
+        glLineWidth(6.0);
         glTranslated(0.79,-0.430,-3.9);
         glRotated(-100, 1.0, 0.0, 0.0);
         glScalef(0.05,0.5,1.0);
@@ -532,33 +473,30 @@ void myreshape(int w,int h)
         display_string(7.6 ,6.4,"RETINA",2);
         draw_mark_line(7.5,-1.0,6.5,-4.3);
         display_string(6.2 ,-5.1,"OPTICAL NERVE",2);
-
-
-
-
     //end of 3D-EYE
 
-    if(xt == 1){
+if((xt == 1) && (xu == 0) ){
 
-    glMatrixMode (GL_PROJECTION); // Tell opengl that we are doing project matrix work
-    glLoadIdentity(); // Clear the matrix
-    glOrtho(-9.0, 9.0, -9.0, 9.0, 0.0, 30.0); // Setup an Ortho view
-    glMatrixMode(GL_MODELVIEW); // Tell opengl that we are doing model matrix work. (drawing)
-    glLoadIdentity(); // Clear the model matrix
-    glPushMatrix();
+
+    glMatrixMode (GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-9.0, 9.0, -9.0, 9.0, 0.0, 30.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 
     //build house
     glPushMatrix();
         glTranslated(-9,-1.0,0);
         glRotated(-360,0,0,1);
         glScaled(0.6,0.6,0.6);
-		   home();
+        home();
     glPopMatrix();
 
-        glColor3f(1.0, 0.972549, 0.8627);		/* set current color to white */
-        glRectf(-9.5 ,-0.5,0.32,2);
+    //start of the lighting
+    glColor3f(1.0, 0.972549, 0.8627);
+    glRectf(-9.5 ,-0.5,0.32,2);
 
-      glPushMatrix();
+    glPushMatrix();
         glColor3f(1.0, 0.972549, 0.8627);
         glBegin(GL_TRIANGLES);
         glVertex2f(0.32,2);
@@ -566,83 +504,43 @@ void myreshape(int w,int h)
         glVertex2f(2.0,1.0);
         glEnd();
     glPopMatrix();
+    //end of lighting
 
-    glPushMatrix();
-    glColor3f(1.0, 0.972549, 0.8627);
-    glBegin(GL_TRIANGLES);
-        glVertex2f(2.0, 1.0);
-        glVertex2f(6.9,1.5);
-        glVertex2f(6.8,3.70);
-        glEnd();
-    glPopMatrix();
-
-
-    if(xt == 1){
-    glPushMatrix();
-        glColor3f(0.65,0.65,0.65);
-        glTranslated(-8,-1.0,0);
-        glRotated(-360,0,0,1);
-        glScaled(0.6,0.6,0.6);
-		   home();
-    glPopMatrix();
-}
-
-    if(xt == 2){
-        glBegin(GL_POINTS);
-            glPointSize(6);
-            glVertex2f(9,-1);
-        glEnd();
-    }
-
-    if(xt == 3){
     //inverted house on the optical fibre
    glPushMatrix();
-        glTranslated(7,3,0);
+        glTranslated(6.9,3,0);
         glRotated(-180,0,0,1);
-        glScaled(0.2,0.2,0.2);
-           // buildHouse();
-		   home();
+        glScaled(0.2,0.2,5);
+        home();
     glPopMatrix();
-    }
-    }
-}
-    if(xu == 1){
-    glMatrixMode (GL_PROJECTION); // Tell opengl that we are doing project matrix work
-    glLoadIdentity(); // Clear the matrix
-    glOrtho(-9.0, 9.0, -9.0, 9.0, 0.0, 30.0); // Setup an Ortho view
-    glMatrixMode(GL_MODELVIEW); // Tell opengl that we are doing model matrix work. (drawing)
-    glLoadIdentity(); // Clear the model matrix
-    glPushMatrix();
-    //first position along the x axis
-    glPushMatrix();
-        glTranslated(8.0,-0.2,0);
-        glRotated(-200.0,0,0,1);
-        glScaled(0.2,0.2,0.2);
-           // buildHouse();
-		   home();
-    glPopMatrix();
-    }
 
-    if(xu == 3){
-
-    glMatrixMode (GL_PROJECTION); // Tell opengl that we are doing project matrix work
-    glLoadIdentity(); // Clear the matrix
-    glOrtho(-9.0, 9.0, -9.0, 9.0, 0.0, 30.0); // Setup an Ortho view
-    glMatrixMode(GL_MODELVIEW); // Tell opengl that we are doing model matrix work. (drawing)
-    glLoadIdentity(); // Clear the model matrix
     glPushMatrix();
-
-    //second postion along x axis
-    glPushMatrix();
-        glTranslated(9.4,-0.9,0);
-        glRotated(-200.0,0,0,1);
-        glScaled(0.2,0.2,0.2);
-           // buildHouse();
-		   home();
-        glPopMatrix();
-
+        glColor3f(1.0, 0.972549, 0.8627);
+        glBegin(GL_TRIANGLES);
+        glVertex2f(2.0,1.0);
+        glVertex2f(2.0,1.0);
+        glVertex2f(6.9,1.0);
+        glVertex2f(6.6,3.70);
+        glEnd();
     glPopMatrix();
 }
+     glPointSize(12);
+     if(xt == 1){
+        for(i=3;i>0;i = i-0.4){
+        glBegin(GL_POINTS); // render with points
+           //glColor3d(0.92156,0.815686,0.556862);
+            glColor3b(1,0,0);
+            glVertex3f(7.1,3.5-i,-5); //display a point
+        glEnd();
+        }
+        glBegin(GL_POINTS);
+            glColor3b(1,0,0);
+            glVertex3f(7.1,2.5,-5);
+        glEnd();
+    }
+
+
+
 
  //labelling the parts of the eye
         draw_mark_line(1.49 ,2.2,0.0,3.4);
@@ -662,83 +560,31 @@ void myreshape(int w,int h)
         draw_mark_line(7.5,-1.0,6.5,-4.3);
         display_string(6.2 ,-5.1,"OPTICAL NERVE",2);
 
-
     glutSwapBuffers();
 
+    }
+
+    glFlush();
 }
-
-void NormalKey(GLubyte key, GLint x, GLint y)
-{
-	switch ( key )    {
-		case ESCAPE : printf("Escape pressed. Exit.\n");
-			      glutDestroyWindow(window);	/* Close the window */
-			      exit(0);
-			      break;
-
-		case ' ':view=1;
-			 display();
-			 break;
-		default:break;
-	}
-}
-
-
-
-
-const GLfloat light_ambient[]  = { 0.0f, 0.0f, 0.0f, 1.0f };
-const GLfloat light_diffuse[]  = { 1.0f, 1.0f, 1.0f, 1.0f };
-const GLfloat light_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-const GLfloat light_position[] = { 2.0f, 5.0f, 5.0f, 0.0f };
-
-const GLfloat mat_ambient[]    = { 0.7f, 0.7f, 0.7f, 1.0f };
-const GLfloat mat_diffuse[]    = { 0.8f, 0.8f, 0.8f, 1.0f };
-const GLfloat mat_specular[]   = { 1.0f, 1.0f, 1.0f, 1.0f };
-const GLfloat high_shininess[] = { 100.0f };
-
 
 int main(int argc, char *argv[])
 {
     glutInit(&argc, argv);
-    glutInitWindowSize(1366,683);
+    glutInitWindowSize(2550,2540);
     glutInitWindowPosition(10,10);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-
     glutCreateWindow("Human Eye");
-    //glutReshapeFunc(resize);
-
     glutReshapeFunc(myreshape);
     //glutDisplayFunc(display);
     glutKeyboardFunc(NormalKey);
     glutReshapeFunc(ReSizeGLScene);
     glutSpecialFunc(SpecialKeyFunc);
-       glutDisplayFunc(display);
-//       glutTimerFunc(0,timer_callback,0);
-
+    glutDisplayFunc(display);
     glClearColor(1,1,1,1);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-/*
-    glEnable(GL_LIGHT0);
-    glEnable(GL_NORMALIZE);
-    glEnable(GL_COLOR_MATERIAL);
-    glEnable(GL_LIGHTING);
-
-   glLightfv(GL_LIGHT0, GL_AMBIENT,  light_ambient);
-   glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_diffuse);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-
-    glMaterialfv(GL_FRONT, GL_AMBIENT,   mat_ambient);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE,   mat_diffuse);
-    glMaterialfv(GL_FRONT, GL_SPECULAR,  mat_specular);
-    glMaterialfv(GL_FRONT, GL_SHININESS, high_shininess);
-
-*/
-     //glViewport(0,0,640,480);
     glutMainLoop();
-
     return EXIT_SUCCESS;
 }
